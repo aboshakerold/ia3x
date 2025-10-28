@@ -1,110 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Macho Menu</title>
-  <style>
-    body {
-      background: transparent;
-      margin: 0;
-      padding: 0;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 16px;
-    }
-    #container {
-      position: absolute;
-      top: 10vh;
-      left: 5vw;
-      width: 25vw;
-      background: rgba(0,0,0,0.85);
-      border: 1px solid red;
-      border-radius: 4px;
-      padding: 1vw;
-      display: none;
-    }
-    .item {
-      padding: 0.6vw 0;
-      cursor: pointer;
-      border-bottom: 1px solid #333;
-    }
-    .item:hover, .item.active {
-      color: #ff4444;
-    }
-    .tabs {
-      display: flex;
-      gap: 1vw;
-      margin-bottom: 1vw;
-    }
-    .tab {
-      padding: 0.3vw 0.6vw;
-      background: rgba(255,255,255,0.1);
-      cursor: pointer;
-    }
-    .tab.active {
-      background: red;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Macho Menu</title>
+    <style>
+        body {
+            background: transparent;
+            margin: 0;
+            padding: 0;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 16px;
+        }
+        #container {
+            position: absolute;
+            top: 10vh;
+            left: 5vw;
+            width: 25vw;
+            background: rgba(0,0,0,0.85);
+            border: 1px solid red;
+            border-radius: 4px;
+            padding: 1vw;
+            display: none;
+        }
+        .item {
+            padding: 0.6vw 0;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+        }
+        .item:hover, .item.active {
+            color: #ff4444;
+        }
+    </style>
 </head>
 <body>
-  <div id="container">
-    <div class="tabs" id="tabs"></div>
-    <div id="menu"></div>
-  </div>
+    <div id="container">
+        <div id="menu"></div>
+    </div>
 
-  <script>
-    let currentMenu = [];
-    let currentIndex = 0;
-    let currentTabs = [];
-    let currentTabIndex = 0;
+    <script>
+        let currentMenu = [];
+        let currentIndex = 0;
 
-    function renderTabs(tabs) {
-      const tabsEl = document.getElementById('tabs');
-      tabsEl.innerHTML = '';
-      tabs.forEach((tab, i) => {
-        const el = document.createElement('div');
-        el.className = 'tab' + (i === currentTabIndex ? ' active' : '');
-        el.textContent = tab;
-        el.onclick = () => {
-          fetch(`https://macho_menu/changeTab`, { method: 'POST', body: JSON.stringify({ index: i }) });
-        };
-        tabsEl.appendChild(el);
-      });
-    }
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+            if (data.action === 'setVisible') {
+                document.getElementById('container').style.display = data.visible ? 'block' : 'none';
+            } else if (data.action === 'setCurrent') {
+                currentMenu = data.menu || [];
+                currentIndex = (data.current || 1) - 1;
+                renderMenu();
+            }
+        });
 
-    function renderMenu() {
-      const menuEl = document.getElementById('menu');
-      menuEl.innerHTML = '';
-      currentMenu.forEach((item, i) => {
-        const div = document.createElement('div');
-        div.className = 'item' + (i === currentIndex ? ' active' : '');
-        div.textContent = item.label || 'Item';
-        div.onclick = () => {
-          fetch(`https://macho_menu/confirm`, { method: 'POST', body: JSON.stringify({ index: i }) });
-        };
-        menuEl.appendChild(div);
-      });
-    }
+        function renderMenu() {
+            const menuEl = document.getElementById('menu');
+            menuEl.innerHTML = '';
+            currentMenu.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'item' + (i === currentIndex ? ' active' : '');
+                div.textContent = item.label || 'Item';
+                div.onclick = () => {
+                    fetch(`https://macho_menu/confirm`, { method: 'POST', body: JSON.stringify({ index: i }) });
+                };
+                menuEl.appendChild(div);
+            });
+        }
 
-    window.addEventListener('message', (event) => {
-      const data = event.data;
-      if (data.action === 'setVisible') {
-        document.getElementById('container').style.display = data.visible ? 'block' : 'none';
-      } else if (data.action === 'setCurrent') {
-        currentMenu = data.menu || [];
-        currentIndex = (data.current || 1) - 1;
-        renderMenu();
-      } else if (data.action === 'setTabs') {
-        currentTabs = data.tabs || [];
-        renderTabs(currentTabs);
-      } else if (data.action === 'setTabIndex') {
-        currentTabIndex = data.index || 0;
-        renderTabs(currentTabs);
-      }
-    });
-
-    // تأكد أن الواجهة مخفية في البداية
-    document.getElementById('container').style.display = 'none';
-  </script>
+        // تأكد أن الواجهة مخفية في البداية
+        document.getElementById('container').style.display = 'none';
+    </script>
 </body>
 </html>
